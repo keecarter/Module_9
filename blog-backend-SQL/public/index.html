@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat App</title>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <ul id="messages"></ul>
+  <input id="nickname" placeholder="Enter your nickname" autocomplete="off"/>
+  <input id="message" placeholder="Type a message..." autocomplete="off"/>
+  <p id="typing"></p>
+
+  <script>
+    const socket = io();
+
+    // Set nickname
+    const nicknameInput = document.getElementById('nickname');
+    nicknameInput.addEventListener('change', () => {
+      socket.emit('setNickname', nicknameInput.value);
+    });
+
+    // Send message
+    const messageInput = document.getElementById('message');
+    messageInput.addEventListener('keypress', () => {
+      socket.emit('typing');
+    });
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        socket.emit('chatMessage', messageInput.value);
+        const li = document.createElement('li');
+        li.textContent = `You: ${messageInput.value}`;
+        document.getElementById('messages').appendChild(li);
+        messageInput.value = '';
+      }
+    });
+
+    // Display messages
+    socket.on('message', (msg) => {
+      const li = document.createElement('li');
+      li.textContent = msg;
+      document.getElementById('messages').appendChild(li);
+    });
+
+    // Show typing notification
+    socket.on('typing', (msg) => {
+      document.getElementById('typing').textContent = msg;
+      setTimeout(() => {
+        document.getElementById('typing').textContent = '';
+      }, 3000);
+    });
+
+    // Show who's online
+    socket.on('userList', (userList) => {
+      console.log('Users online:', userList);
+    });
+  </script>
+</body>
+</html>
